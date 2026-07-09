@@ -44,3 +44,26 @@ jobs:
       - uses: re-actors/alls-green@release/v1
         with:
           jobs: ${{ toJSON(needs) }}
+  deploy:
+    needs: nix
+    if: success() && github.ref_name == 'main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pages: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Retrieve build result
+        uses: actions/download-artifact@v8
+        with:
+          name: slides-html
+          path: result
+      - name: Prepare static assets to deploy
+        run: |
+          mkdir -p dist
+          cp -R result/* dist
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+      - uses: actions/deploy-pages@v5
