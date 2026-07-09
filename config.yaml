@@ -1,0 +1,8 @@
+defaults:
+  terminal_font_size: 16
+  max_columns: 200 # if the terminal is larger than this, it will be resized to this value
+  max_columns_alignment: center
+export:
+  dimensions:
+    columns: 200
+    rows: 50
