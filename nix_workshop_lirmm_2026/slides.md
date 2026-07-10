@@ -162,13 +162,14 @@ nix develop
 presenterm -x nix_workshop_lirmm_2026/slides.md
 ```
 
-> How to use?
->
-> - Type 12G to go to this slide (or "n" 12 times)
-> - n: next slide
-> - p: previous slide
-> - Ctrl + e : execute code snippets (I promise, nothing dangerous, it'll be shown on the slides)
->
+How to use?
+
+- Type `12G` to go to this slide (or "n" 12 times)
+- `n`: next slide
+- `p`: previous slide
+- `Ctrl + e` : execute code snippets (I promise, nothing dangerous, it'll be shown on the slides)
+  - Some output might display wrong the first time, use `Ctrl + r` to reload the slide, then `Ctrl + e`
+
 <!-- end_slide -->
 
 Well you just used `Nix`
@@ -233,7 +234,7 @@ nix build nixpkgs#{presenterm,kitty} .#nix_workshop_lirmm_2026 --print-out-paths
 * Unique hash of all inputs
 
 ```nix
-          { 
+          {
             stdenv, # standard build environment (compilers, etc)
             lib, # helper functions 
             presenterm, kitty, ... # dependencies
@@ -267,15 +268,432 @@ nix build nixpkgs#{presenterm,kitty} .#nix_workshop_lirmm_2026 --print-out-paths
 ```
 <!-- end_slide -->
 
-What about the slides?
+Let's try something
+===
+
+Edit `flake.nix`: 
+* Change:
+  * `version = "1.0.0";`
+  * to `version = "2.0.0";`
+* Add: 
+  * `touch $out/i-added-this` to the end of `installPhase`
+* Run:
+  * `nix build .#nix_workshop_lirmm_2026 --print-out-paths`
+* Now do `ls /nix/store | grep nix_workshop_lirmm_2026`
+  * You've got multiple paths
+* Now do `ls -l ./result`
+  * That's the one you just built
+* Now do `ls ./result`
+  * Your new file is here
+  * Look into the other paths, your file is not here
+<!-- end_slide -->
+
+
+
+Back to the slides?
 ===
 
 * You already know how to present them. Btw you can also do `nix run .#nix_workshop_lirmm_2026`
 * Want them as html?
 ```bash +exec
+echo "Building slides..."
 nix build .#nix_workshop_lirmm_2026.html --print-out-paths
+echo "This might take a while, installing chromium..."
+# want to see them, don't have a web browser?
 nix run nixpkgs#chromium ./result-html/slides.html
 ```
+<!-- end_slide -->
+
+Back to the basics
+===
+
+# Nix is a functional programming language
+
+Try
+
+```bash +exec
+kitty sh -c '
+  nix repl
+'
+```
+Examples:
+- `1+2` -> `3`
+- `let x = 1; in x + 2` -> `3`
+- curried functions:
+  - `let add = a: b: a + b; in add 1 2` -> `3`
+- attribute sets:
+  - `let attr = { a.b.c = 2; }; in attr.a.b` -> `{ c = 2; }`
+- let ... in ...
+
+You can fool around with nix language. See https://nix.dev/tutorials/nix-language for a quick walk-through.
+<!-- end_slide -->
+
+Packaging basics
+===
+
+Let's create our first derivation!
+
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+```bash +exec
+nix-build - <<'EOF'
+{ lib, stdenv, fetchurl }:
+stdenv.mkDerivation rec {
+  pname = "hello";
+  version = "2.12";
+  src = fetchurl {
+    url = "mirror://gnu/${pname}/${pname}-${version}.tar.gz";
+    sha256 = "1ayhp9v4m4rdhjmnl2bq3cibrbqqkgjbl3s7yk2nhlh8vj3ay16g";
+  };
+  meta = with lib; {
+    license = licenses.gpl3Plus;
+  };
+}
+EOF
+```
+<!-- column: 1 -->
+* Problem: the expression in is a function, which only produces its intended output if it is passed the correct arguments.
+```nix
+{ lib, stdenv, fetchurl }:
+```
+
+* Where do they come from?
+  * Right now nowhere
+  * But they are packages from `nixpkgs`
+
+* Let's see how to use it.
+
+<!-- end_slide -->
+
+Building your first derivation
+===
+
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+```bash +exec
+nix-build - <<'EOF'
+let
+  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-26.05";
+  pkgs = import nixpkgs { config = {}; overlays = []; };
+in
+{
+  hello = pkgs.callPackage ./pkgs/hello.nix { };
+}
+EOF
+```
+<!-- column: 1 -->
+* `callPackage` automatically passes attributes from `pkgs` to the given function, if they match attributes required by that function’s argument attribute set. 
+  * In this case, `callPackage` will supply `stdenv` and `fetchzip` to the function defined in `hello.nix`.
+```nix {1, 5-8}
+{ lib, stdenv, fetchurl }:
+stdenv.mkDerivation rec {
+  pname = "hello";
+  version = "2.12";
+  src = fetchurl {
+    url = "mirror://gnu/${pname}/${pname}-${version}.tar.gz";
+    sha256 = "1ayhp9v4m4rdhjmnl2bq3cibrbqqkgjbl3s7yk2nhlh8vj3ay16g";
+  };
+  meta = with lib; {
+    license = licenses.gpl3Plus;
+  };
+}
+```
+<!-- end_slide -->
+
+Let's build a shell script, with parameters
+===
+
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+```bash +exec
+nix-build - <<'EOF'
+let
+  pkgs = import <nixpkgs> { };  # shorthand for fetching nixpkgs
+  hello-drv = 
+    {
+      writeShellScriptBin,
+      audience ? "world",
+    }:
+    writeShellScriptBin "hello" ''
+      echo "Hello, ${audience}!"
+    ''
+  ;
+in
+{
+  hello = pkgs.callPackage hello-drv { audience = "LIRMM"; };
+}
+EOF
+```
+
+<!-- pause -->
+<!-- column: 1 -->
+
+* This generated ./result
+```bash +exec_replace
+ls -lR ./result/bin/hello
+```
+
+* It's a shell script
+```bash +exec_replace
+cat ./result/bin/hello
+```
+
+* And even bash is reproducible ;)
+
+* You can call it with `./result/bin/hello`
+
+```bash +exec
+./result/bin/hello
+```
+<!-- end_slide -->
+
+Add a depencency
+===
+
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+```bash +exec {7, 11}
+nix-build - <<'EOF'
+let
+  pkgs = import <nixpkgs> { };  # shorthand for fetching nixpkgs
+  hello-drv = 
+    {
+      writeShellScriptBin,
+      cowsay,
+      audience ? "world",
+    }:
+    writeShellScriptBin "hello" ''
+      ${cowsay}/bin/cowsay "Hello, ${audience}!"
+    ''
+  ;
+in
+{
+  hello = pkgs.callPackage hello-drv { audience = "LIRMM"; };
+}
+EOF
+./result/bin/hello
+```
+
+<!-- pause -->
+<!-- column: 1 -->
+* `${...}` is the syntax to evaluate nix expression in strings
+  * Here `${cowsay}` evaluates the cowsay derivation from nixpkgs
+  * Note that it will build it if necessary.
+* After nix has replaced all variables, the remainder are left as-is, so bash can use them
+* `$var` would be a bash variable in this context
+
+```bash +exec {6-8}
+nix-build - <<'EOF'
+let
+  pkgs = import <nixpkgs> { };
+  hello-drv = { writeShellScriptBin, cowsay, audience ? "world", }:
+    writeShellScriptBin "hello" ''
+      var="$(pwd)"
+      cowsay="Meuuuh!"
+      ${cowsay}/bin/cowsay "Hello, ${audience}! We are in $var directory. $cowsay"
+    '';
+in { hello = pkgs.callPackage hello-drv { audience = "LIRMM"; }; }
+EOF
+./result/bin/hello
+```
+
+
+<!-- end_slide -->
+
+Anatomy of a derivation
+===
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+```nix
+{
+  stdenv, # standard build environment (compilers, etc)
+  lib, # helper functions 
+  ... # dependencies
+}:
+stdenv.mkDerivation {
+  name = "hello"; 
+  version = "1.0.0";
+  outputs = [ "out" "doc" ]; 
+  buildInputs = [ ]; # dependencies needed for building
+  nativeBuildInputs = [ ]; # dependencies needed for building in shells
+  propagatedBuildInputs = [ ]; # dependencies needed at runtime
+  src = lib.cleanSource ./.; # all source files
+
+  # Build hooks
+  # buildPhase, preBuildPhase, postBuildPhase,
+  # installPhase, preInstallPhase, postInstallPhase, 
+  # checkPhase, preCheckPhase, postCheckPhase, 
+  # fixupPhase, preFixupPhase, postFixupPhase, 
+  # patchPhase, prePatchPhase, postPatchPhase, 
+  # unpackPhase, preUnpackPhase, postUnpackPhase,
+  # configurePhase, preConfigurePhase, postConfigurePhase
+
+  # metadata
+  meta = with lib; {
+    license = licenses.gpl3Plus;
+    mainProgram = "run-slides";
+  };
+}
+```
+
+<!-- pause -->
+<!-- column: 1 -->
+
+# That's a lot of build hooks
+## Not to worry, nix has sensible defaults
+### Want to build a `cmake` project?
+* Add
+
+```
+nativeBuildInputs = [ cmake ];
+```
+
+* Nix will run cmake hooks for you
+
+<!-- end_slide -->
+
+
+Let's package SpaceVecAlg together
+===
+
+
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+
+# SpaceVecAlg is a library for spatial vector algebra, used in robotics.
+* It has a C++ API 
+* and Python bindings.
+* Project: https://github.com/jrl-umi3218/SpaceVecAlg
+
+## Let's start with C++ dependencies:
+
+  * cmake, pkg-config, jrl-cmakemodules
+  * Eigen3
+  * Boost
+
+We need to disable:
+- Doxygen documentation `-DINSTALL_DOCUMENTATION=OFF`
+- Cython bindings `-DPYTHON_BINDING=OFF`
+
+<!-- column: 1 -->
+# Solution
+<!-- pause -->
+
+```nix
+{
+  stdenv, lib,
+  cmake, pkg-config, jrl-cmakemodules,
+  eigen, boost,
+  fetchFromGitHub,
+}:
+stdenv.mkDerivation {
+  pname = "spacevecalg"; version = "1.2.10";
+
+  src = fetchFromGitHub {
+    owner = "jrl-umi3218"; repo = "SpaceVecAlg"; tag = "v1.2.10";
+    hash = "sha256-fTKKj3m8cO4F46LlO7r8JeuWLhlyRcX7EblHroDYFkQ=";
+  };
+
+  buildInputs = [ jrl-cmakemodules ];
+  nativeBuildInputs = [ cmake pkg-config ];
+  propagatedBuildInputs = [ eigen boost ];
+
+  cmakeFlags = [
+    (lib.cmakeBool "PYTHON_BINDING" false)
+    (lib.cmakeBool "INSTALL_DOCUMENTATION" false)
+  ];
+
+  meta = with lib; {
+    description = "Spatial Vector Algebra with the Eigen library";
+    homepage = "https://github.com/jrl-umi3218/SpaceVecAlg";
+    license = licenses.bsd2;
+    platforms = platforms.all;
+  };
+}
+```
+<!-- end_slide -->
+
+Let's add python and documentation
+===
+
+
+<!-- column_layout: [3, 2] -->
+<!-- column: 0 -->
+You need:
+* doxygen
+* python3Packages
+  * numpy
+  * eigen3-to-python
+
+# Solution
+<!-- pause -->
+
+```nix {5-7,9-11}
+{
+  stdenv, lib,  fetchFromGitHub,
+  cmake, pkg-config, jrl-cmakemodules,
+  eigen, boost,
+  doxygen,
+  python3Packages,
+  with-python ? true,
+}:
+let 
+  use-python = with-python && !stdenv.hostPlatform.isDarwin;
+in
+```
+
+<!-- pause -->
+
+<!-- column: 1 -->
+```nix {1,10,11-12,14-15,18}
+stdenv.mkDerivation {
+  pname = "spacevecalg"; version = "1.2.10";
+  src = fetchFromGitHub {
+    owner = "jrl-umi3218"; repo = "SpaceVecAlg"; tag = "v1.2.10";
+    hash = "sha256-fTKKj3m8cO4F46LlO7r8JeuWLhlyRcX7EblHroDYFkQ=";
+  };
+
+  buildInputs = [ jrl-cmakemodules ];
+  nativeBuildInputs = [ cmake pkg-config ]
+  ++ [ doxygen ]
+  ++ lib.optionals use-python
+     (with python3Packages; [ cython python distutils pytest ]);
+  propagatedBuildInputs = [ eigen boost ]
+  ++ lib.optionals use-python
+     [ python3Packages.numpy python3Packages.eigen3-to-python ];
+
+  cmakeFlags = [
+    (lib.cmakeBool "PYTHON_BINDING" use-python)
+  ];
+  doCheck = true;
+  meta = with lib; {
+    description = "Spatial Vector Algebra with the Eigen library";
+    homepage = "https://github.com/jrl-umi3218/SpaceVecAlg";
+    license = licenses.bsd2;
+    platforms = platforms.all;
+  };
+}
+```
+<!-- end_slide -->
+
+
+
+
+
+Cleanup
+===
+
+* We've put a lot of things in `/nix/store`.
+  * If you no longer want them, nix has a garbage collector
+    * This will remove all files from `/nix/store` not currently in use.
+
+```
+nix-collect-garbage
+```
+
+
+* `mc-rtc` generated a few cached convex hull files, you can remove `~/.local/share/mc_rtc`
+
 <!-- end_slide -->
 
 
@@ -297,7 +715,6 @@ kitty sh -c '
 
 <!-- alignment: left -->
 # nix build 
-<!-- font_size: 2 -->
 * What got installed? Where?
 * Let's check
 <!-- font_size: 1 -->
