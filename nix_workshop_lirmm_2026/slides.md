@@ -11,9 +11,8 @@ author: Arnaud TANGUY - CDD BIATSS - Appui à la recherche - LIRMM
 It works on my machine!
 <!-- end_slide -->
 
-<!-- font_size: 4 -->
 Does it though?
-<!-- font_size: 2 -->
+===
 <!-- incremental_lists: true -->
 * Maybe today.
   *  Will it tomorrow?
@@ -29,10 +28,8 @@ Does it though?
 <!-- incremental_lists: false -->
 <!-- end_slide -->
 
-<!-- alignment: left -->
-<!-- font_size: 4 -->
-# Can you share it?
-<!-- font_size: 2 -->
+Can you share it?
+===
 <!-- incremental_lists: true -->
 ## Here is a link to a repository with my code 
 * and here is a `README.md` file
@@ -57,10 +54,8 @@ Maybe it works.
 But it's painful.
 <!-- end_slide -->
 
-<!-- alignment: left -->
-<!-- font_size: 4 -->
-# Maybe you tried to do things right
-<!-- font_size: 2 -->
+Maybe you tried to do things right
+==
 <!-- incremental_lists: true -->
 ## You made `debian packages`
 * did you? congrats ! 
@@ -79,10 +74,8 @@ But it's painful.
 <!-- incremental_lists: false -->
 <!-- end_slide -->
 
-<!-- alignment: left -->
-<!-- font_size: 4 -->
-# Now... 
-<!-- font_size: 2 -->
+Now... 
+===
 <!-- incremental_lists: true -->
 ## Your colleague wants a different version 
 * Make a new package?
@@ -98,88 +91,222 @@ But it's painful.
 
 
 
-<!-- alignment: left -->
-<!-- font_size: 4 -->
-# Nix to the rescue 
-<!-- font_size: 2 -->
+Nix to the rescue 
+===
 Nix is a purely functional declarative package manager. 
 <!-- incremental_lists: true -->
-<!-- font_size: 2 -->
 - **Declarative**: specify your dependencies explicitely
-
 <!-- incremental_lists: false -->
 <!-- end_slide -->
 
-
-<!-- alignment: center -->
-<!-- new_lines: 5 -->
-<!-- font_size: 4 -->
-Tester mes changements? 
-<!-- font_size: 3 -->
-T'es sûr ?
-<!-- new_lines: 1 -->
+Install Nix
+===
+# Unfortunately, we cannot do it with Nix itself
+## so... README.md it is.
 <!-- font_size: 1 -->
-Installe ça¸ ça, ça et ça aussi, ah et pour ça compile il te faut x,y,z!
-<!-- font_size: 1 -->
-<!-- new_lines: 2 -->
-Et ça met 30mn à compiler
-<!-- end_slide -->
+```
+ 1. install the right apt package
+sudo apt install -y nix-setup-systemd
 
-<!-- alignment: center -->
-<!-- new_lines: 7 -->
-<!-- font_size: 4 -->
-Ça n'a pas fonctionné?
-<!-- font_size: 3 -->
-Ah, mais t'es sous Ubuntu 26?
-<!-- font_size: 2 -->
-Moi je suis sous 20 depuis le début de ma thèse
-<!-- font_size: 1 -->
-Mais surtout j'y touche pas, ça fonctionne comme ça !
-<!-- end_slide -->
+# 2. activate the new CLI and flake features
+echo 'experimental-features = nix-command flakes' | sudo tee -a /etc/nix/nix.conf
 
-<!-- alignment: center -->
-<!-- new_lines: 7 -->
-<!-- font_size: 4 -->
-Nix 
-<!-- font_size: 3 -->
-- Déclaratif
-- Reproductible
-- Rapide : cache binaire
-- Linux, MacOS, Windows (WSL2)
+# 3. (optional) if you trust us, add our binary caches to avoid recompiling everything
+echo 'extra-substituters = https://gepetto.cachix.org https://attic.iid.ciirc.cvut.cz/ros https://mc-rtc-nix.cachix.org' | sudo tee -a /etc/nix/nix.conf
+echo 'extra-trusted-public-keys = gepetto.cachix.org-1:toswMl31VewC0jGkN6+gOelO2Yom0SOHzPwJMY2XiDY= ros:JR95vUYsShSqfA1VTYoFt1Nz6uXasm5QrcOsGry9f6Q= mc-rtc-nix.cachix.org-1:5M3sLvHXJCep4wc1tQl7QuFWL2eH2I0jkuvWtqJDYQs=' | sudo tee -a /etc/nix/nix.conf
 
+# 4. activate your new nix.conf
+sudo systemctl restart nix-daemon
 
-<!-- end_slide -->
+# 5. allow yourself to use nix
+sudo usermod -aG nix-users $(whoami)
+newgrp nix-users
 
-
-
-<!-- jump_to_middle -->
-<!-- alignment: center -->
-```text
- _     _              ____                      
-| |   (_)_   _____   |  _ \  ___ _ __ ___   ___ 
-| |   | \ \ / / _ \  | | | |/ _ \ '_ ` _ \ / _ \
-| |___| |\ V /  __/  | |_| |  __/ | | | | | (_) |
-|_____|_| \_/ \___|  |____/ \___|_| |_| |_|\___/
+# 6. test everything is fine
+nix run nixpkgs#ponysay it works
 ```
 
+If you don’t want this nix-setup-systemd apt package, other options include:
+* Nix installer: https://nixos.org/download/
+* Nix installer beta: https://github.com/NixOS/nix-installer
+* Lix installer: https://lix.systems/install/
 <!-- end_slide -->
 
-<!-- alignment: center -->
-<!-- new_lines: 3 -->
-<!-- font_size: 3 -->
-Nix c'est 4 commandes!
+Install Nix
+===
+## Trust me? Let's do it.
 
-<!-- font_size: 1 -->
+```
+git clone https://github.com/arntanguy/presenterm_slides
+cd presenterm_slides/nix_workshop_lirmm_2026
+./install_nix_linux.sh
+```
+
+## You should see this
+
+```bash +exec
+kitty sh -c '
+  nix run nixpkgs#ponysay Nix works
+  read -n 1 -s -r -p "Press any key to continue..."
+'
+```
+<!-- end_slide -->
+
+Now let's start this presentation
+===
+
+# That way you can run the examples yourself
+
+```bash
+nix develop
+presenterm -x nix_workshop_lirmm_2026/slides.md
+```
+
+> How to use?
+>
+> - Type 12G to go to this slide (or "n" 12 times)
+> - n: next slide
+> - p: previous slide
+> - Ctrl + e : execute code snippets (I promise, nothing dangerous, it'll be shown on the slides)
+>
+<!-- end_slide -->
+
+Well you just used `Nix`
+===
+
+# What happened?
+
+- `nix develop` created a shell with all dependencies needed to run this presentation
+- This is defined in a derivation in `flake.nix`
+```nix {3,4, 8, 12-15}
+          {
+            lib, stdenv,
+            presenterm,
+            kitty,
+            ...
+          }:
+          let slideName = "nix_workshop_lirmm_2026"; in
+          stdenv.mkDerivation {
+            name = slideName;
+            version = "1.0.0";
+            outputs = [ "out" "html" ]; 
+            nativeBuildInputs = [
+              presenterm
+              kitty
+            ];
+            src = lib.cleanSource ./.;
+            installPhase = ''
+              mkdir -p $out/bin $out/share/slides
+              cp -r ./${slideName}/* $out/share/slides/
+              cat <<EOF > $out/bin/run-slides
+              #!/bin/sh
+              exec ${kitty}/bin/kitty ${presenterm}/bin/presenterm -x "$out/share/slides/slides.md" "\$@"
+              EOF
+              chmod +x $out/bin/run-slides
+
+              # html
+              mkdir -p $html
+              ${presenterm}/bin/presenterm --export-html -c config.yaml ./${slideName}/slides.md
+              cp ./${slideName}/slides.html $html/ || true
+            '';
+            meta.mainProgram = "run-slides";
+          };
+```
+
+- `presenterm` and `kitty` are derivations too. Nix will evaluate them as needed, and their dependencies
+<!-- end_slide -->
+
+Wait... where is it installed?
+===
+
+# Let's check
+
+```bash +exec
+nix build nixpkgs#{presenterm,kitty} .#nix_workshop_lirmm_2026 --print-out-paths
+```
+<!-- end_slide -->
+
+`/nix/store`
+===
+
+* Store path `/nix/store/yp6d6psnf6jj378kac6k7a13nzij2jyc-nix_workshop_lirmm_2026`
+* Unique hash of all inputs
+
+```nix
+          { 
+            stdenv, # standard build environment (compilers, etc)
+            lib, # helper functions 
+            presenterm, kitty, ... # dependencies
+          }:
+          let slideName = "nix_workshop_lirmm_2026"; in
+          stdenv.mkDerivation {
+            name = slideName; version = "1.0.0"; # metadata
+            outputs = [ "out" "html" ]; 
+            nativeBuildInputs = [ # all used dependencies
+              presenterm
+              kitty
+            ];
+            src = lib.cleanSource ./.; # all source files
+            # how to install
+            installPhase = ''
+              mkdir -p $out/bin $out/share/slides
+              cp -r ./${slideName}/* $out/share/slides/
+              cat <<EOF > $out/bin/run-slides
+              #!/bin/sh
+              exec ${kitty}/bin/kitty ${presenterm}/bin/presenterm -x "$out/share/slides/slides.md" "\$@"
+              EOF
+              chmod +x $out/bin/run-slides
+
+              # html
+              mkdir -p $html
+              ${presenterm}/bin/presenterm --export-html -c config.yaml ./${slideName}/slides.md
+              cp ./${slideName}/slides.html $html/ || true
+            '';
+            meta.mainProgram = "run-slides";
+          };
+```
+<!-- end_slide -->
+
+What about the slides?
+===
+
+* You already know how to present them. Btw you can also do `nix run .#nix_workshop_lirmm_2026`
+* Want them as html?
+```bash +exec
+nix build .#nix_workshop_lirmm_2026.html --print-out-paths
+nix run nixpkgs#chromium ./result-html/slides.html
+```
+<!-- end_slide -->
+
+
+
 <!-- alignment: left -->
-# nix run 
+nix run 
+===
 
-
+# What just happened?
 <!-- font_size: 1 -->
 
 ```bash +exec
-echo "4 commandes: run, shell, build devel" | nix run nixpkgs#cowsay
+kitty sh -c '
+  nix run nixpkgs#fortune | nix run nixpkgs#ponysay
+  read -n 1 -s -r -p "Press any key to continue..."
+'
 ```
+<!-- end_slide -->
 
+<!-- alignment: left -->
+# nix build 
+<!-- font_size: 2 -->
+* What got installed? Where?
+* Let's check
+<!-- font_size: 1 -->
+
+```bash +exec
+nix build nixpkgs#fortune --print-out-paths
+ls -lR ./result/*
+kitty bash -c 'ls; exec bash'
+```
 <!-- end_slide -->
 
 # nix run 

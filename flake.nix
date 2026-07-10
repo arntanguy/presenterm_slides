@@ -9,19 +9,18 @@
       { ... }:
       let
         makeSlidePackage =
-          slideName: html:
+          slideName:
           {
             stdenv,
             presenterm,
             kitty,
             lib,
-            buildHtml ? html,
             ...
           }:
           stdenv.mkDerivation {
             name = slideName;
             version = "1.0.0";
-            outputs = [ "out" ] ++ lib.optional buildHtml "html";
+            outputs = [ "out" "html" ]; 
             nativeBuildInputs = [
               presenterm
               kitty
@@ -36,8 +35,7 @@
               EOF
               chmod +x $out/bin/run-slides
 
-            ''
-            + lib.optionalString buildHtml ''
+              # html
               mkdir -p $html
               ${presenterm}/bin/presenterm --export-html -c config.yaml ./${slideName}/slides.md
               cp ./${slideName}/slides.html $html/ || true
@@ -51,8 +49,7 @@
         ];
 
         makeBothPackages = slideName: {
-          "${slideName}" = makeSlidePackage slideName false;
-          "${slideName}_html" = makeSlidePackage slideName true;
+          "${slideName}" = makeSlidePackage slideName;
         };
 
         allPackages = builtins.foldl' (acc: slideName: acc // makeBothPackages slideName) { } slideNames;
@@ -75,7 +72,7 @@
                 map (
                   slideName:
                   let
-                    drv = makeSlidePackage slideName true {
+                    drv = makeSlidePackage slideName {
                       inherit
                         stdenv
                         presenterm

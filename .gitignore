@@ -2,3 +2,4 @@ build
 build/
 .direnv/
 result
+result-html
