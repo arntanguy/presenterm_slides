@@ -14,6 +14,7 @@ docker run -it -e XDG_RUNTIME_DIR=/tmp  -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY -v $
 
 For X11:
 ```
+xhost +
 docker run -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd)/workspace_tutorial:/workspace nixos/nix
 ```
 
