@@ -2,7 +2,7 @@ Docker for wayland
 
 ```
 mkdir workspace_tutorial
-git clone https://github.com/arntanguy/presenterm_tutorial
+git clone https://github.com/arntanguy/presenterm_slides
 ```
 
 
