@@ -5,24 +5,54 @@ sub_title: "Wednesday, July 22 2026"
 author: Arnaud TANGUY - LIRMM - Research Engineer
 ---
 
+Before we start
+===
+
+<!-- font_size: 2 -->
+* Slides are available online:
+  https://arntanguy.github.io/presenterm_slides/nix_workshop_jrl_2026.html
+* Workshop or live demo / live coding
+
+<!-- end_slide -->
+
 <!-- alignment: center -->
 <!-- jump_to_middle -->
 <!-- font_size: 4 -->
 It works on my machine!
 <!-- end_slide -->
 
-Does it though?
+<!-- alignment: center -->
+<!-- jump_to_middle -->
+<!-- font_size: 4 -->
+But does it on yours?
+<!-- end_slide -->
+
+<!-- alignment: center -->
+<!-- jump_to_middle -->
+<!-- font_size: 4 -->
+Will it 6 months from now?
+<!-- end_slide -->
+
+It works on my machine?
 ===
 
-* Do you know how?
-* Can I try your changes?
-  * Sure...
-  * ...install this, this and that, oh and you need x,y,z too!
-  * ...and it'll take at least 30mn to build
-* It didn't work?
-  * Oh but you're on Ubuntu 26.04? I'm still on 20.04 since the start of my thesis
-  * Ah you had something custom in `LD_LIBRARY_PATH`
-  * Oh and your python virtual env is activated?
+# What does that imply?
+
+## Can I try your changes?
+* Sure...
+* ...install this, this and that, oh and you need x,y,z too!
+* ...and it'll take at least 30mn to build
+
+### It didn't work?
+* Oh but you're on Ubuntu 26.04? I'm still on 20.04 since the start of my thesis
+* Ah you had something custom in `LD_LIBRARY_PATH`
+* Oh and your python virtual env is activated?
+* Sorry, actually the `README.md` is wrong.
+
+## Do you know how?
+* What dependencies are needed? Used?
+* How were they installed? apt, snap, appimage, from source, colcon workspace, ...
+* What happens on system upgrade?
 
 <!-- end_slide -->
 
@@ -488,7 +518,12 @@ Install Nix (optional)
 
 [Install Instructions](https://mc-rtc.github.io/nixpkgs/#setup-nix)
 
-## Or docker (but gui apps most likely won't work)
+## Or docker 
+
+* but gui apps most likely won't work
+  * expecially with nvidia cards
+
+https://github.com/arntanguy/presenterm_slides/tree/main/nix_workshop_jrl_2026
 
 <!-- end_slide -->
 
@@ -1632,12 +1667,4 @@ nix flake init -t github:mc-rtc/nixpkgs#controller
   };
 }
 ```
-
-
-
-
-
-
-
-
 
